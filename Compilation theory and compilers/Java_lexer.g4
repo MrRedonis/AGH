@@ -1,4 +1,4 @@
-grammar Java_grammar;
+lexer grammar Java_lexer;
 
 //Tokeny
 
@@ -43,3 +43,9 @@ PUBLIC:             'public';
 RETURN:             'return';
 VOID:               'void';
 WHILE:              'while';
+
+BOOL_LITERAL:       'true'
+            |       'false'
+            ;
+			
+NULL_LITERAL:       'null';
