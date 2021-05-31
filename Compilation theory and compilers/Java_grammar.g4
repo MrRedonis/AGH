@@ -61,33 +61,15 @@ CHAR_LITERAL:		[.];
 
 IDENTIFIER:         [a-zA-Z] [a-zA-Z0-9_]*;
 
+
 //Gramatyka
 
-program: start* EOF;
-	
-start: classModifier* classDeclaration;
+program: () EOF;
 
-classDeclaration: CLASS IDENTIFIER classBody;
+stringLiteral: (CHAR_LITERAL)+;
 
-classModifier: PRIVATE
-	| PUBLIC;
-	
-classBody: LBRACE classBodyDeclaration* RBRACE;
-
-classBodyDeclaration: memberDeclaration;
-
-memberDeclaration: methodDeclaration
-	| classDeclaration
-	| fieldDeclaration
-	;
-	
-methodDeclaration: methodType IDENTIFIER LPAREN param? RPAREN methodBody;
-
-param: basicType IDENTIFIER (COMMA basicType IDENTIFIER)*;
-
-methodType: basicType
-	| VOID
-	;
+boolLiteral: TRUE
+	| FALSE;
 
 basicType: BOOLEAN
 	| INT
@@ -95,72 +77,60 @@ basicType: BOOLEAN
 	| CHAR
 	| STRING;
 	
-methodBody: block SEMI;
+literal: NULL_LITERAL
+	| INT_LITERAL
+	| FLOAT_LITERAL
+	| CHAR_LITERAL
+	| boolLiteral
+	| stringLiteral;
+	
+basicTypeVoid: basicType
+	| VOID
+	;
+	
+modifier: PRIVATE
+	| PUBLIC;
+	
+methodDeclaration: modifier basicTypeVoid IDENTIFIER LPAREN param? RPAREN block;
 
-block: LBRACE statement* RBRACE;
+param: basicType IDENTIFIER (COMMA basicType IDENTIFIER)*;
+
+block: LBRACE blockStatement* RBRACE;
+
+blockStatement: statement
+	| variableDeclaration SEMI;
 
 statement: assignment SEMI
 	| IF LPAREN expression RPAREN statement (ELSE statement)?
 	| FOR LPAREN forControl RPAREN statement
-	| WHILE parExpression statement
-	| DO statement WHILE parExpression SEMI
-	| RETURN expression? SEMI
-	| BREAK IDENTIFIER? SEMI
+	| WHILE LPAREN expression RPAREN statement
+	| DO statement WHILE LPAREN expression RPAREN
+	| RETURN expression?
+	| BREAK IDENTIFIER?
+	| block
 	| SEMI
 	
-forControl: forInit? SEMI expression? SEMI expression (COMMA expression)*;
+expressionList: expression (COMMA expression)*;
 
-methodCall
-    : IDENTIFIER '(' expressionList? ')'
-
-expression: IDENTIFIER methodCall
-
-
-booleanLiteral: TRUE
-	| FALSE;
-
-stringLiteral: (CHAR_LITERAL)+;
-
--------------------------------------
-
-value: INT_LITERAL
-	| FLOAT_LITERAL
-	| CHAR_LITERAL
-	| stringLiteral;
-
-
-
-declaration: methodDeclaration
-	| varDeclaration
-	| statement
-	;
-
-
-
-identifierType: BOOLEAN
-	| INT
-	| FLOAT
-	;
-
-methodDeclaration: methodType IDENTIFIER LPAREN params? RPAREN block;
-
-params: identifierType IDENTIFIER ( COMMA identifierType IDENTIFIER)*;
-
-block: LBRACE declaration* RBRACE;
-
-statement: expression SEMI
-	| forStatement
-	| ifStatement
-	| returnStatement
-	| whileStatement
-	| block
-	;
+forControl: forInit? SEMI expression? SEMI expressionList?;
 	
-forStatement: FOR LPAREN expression SEMI expression SEMI expression RPAREN block;
+forInit: variableDeclaration
+    | expressionList;
+	
+variableDeclaration: basicType IDENTIFIER (ASSIGN expression)? SEMI;
 
-ifStatement: IF LPAREN expression RPAREN body (ELSE IF LPAREN expression RPAREN body)* (ELSE body)?;
-
-returnStatement: RETURN expression? SEMI;
-
-whileStatement: WHILE LPAREN expression RPAREN body
-whileStatement: WHILE LPAREN expression RPAREN body
+expression: methodCall
+	| expression postfix=(INC | DEC)
+	| prefix=(ADD | SUB| INC | DEC) expression
+	| expression bop=(MUL | DIV | MOD) expression
+	| expression bop=(ADD | SUB) expression
+	| expression bop=(LE | GE | GT | LT) expression
+	| expression bop=(EQUAL | NOTEQUAL) expression
+    | expression bop=(POW | AND | OR) expression
+	| primary;
+	
+primary: LPAREN expression RPAREN
+	| literal
+	| IDENTIFIER;
+	
+assignment: IDENTIFIER ASSIGN expression;
