@@ -64,7 +64,7 @@ IDENTIFIER:         [a-zA-Z] [a-zA-Z0-9_]*;
 
 //Gramatyka
 
-program: () EOF;
+program: (methodDeclaration | variableDeclaration) EOF;
 
 stringLiteral: (CHAR_LITERAL)+;
 
