@@ -1,6 +1,80 @@
 grammar Java_grammar;
 
-//Tokeny
+/*
+ * Parser rules
+ */
+
+program: (methodDeclaration | statementList)+ EOF;
+
+methodDeclaration: modifier methodType IDENTIFIER LPAREN parameter? RPAREN block;
+
+modifier: PRIVATE | PUBLIC;
+
+methodType: type | VOID;
+
+parameter: type IDENTIFIER (COMMA type IDENTIFIER)*;
+
+statementList: statement+;
+
+block: LBRACE statement* RBRACE;
+
+statement:
+    assignment SEMI
+	| IF LPAREN expression RPAREN block (ELSE block)?
+	| FOR LPAREN forControl RPAREN block
+	| WHILE LPAREN expression RPAREN block
+	| RETURN expression? SEMI
+	| BREAK IDENTIFIER? SEMI
+	| variableDeclaration SEMI
+	| expression SEMI
+	| methodInvocation SEMI
+	| block
+	| SEMI;
+
+methodInvocation: IDENTIFIER LPAREN argumentList RPAREN;
+
+argumentList: IDENTIFIER (COMMA IDENTIFIER)*;
+
+variableDeclaration: type IDENTIFIER (ASSIGN expression)?;
+
+assignment: IDENTIFIER ASSIGN expression;
+
+forControl: variableDeclaration SEMI expression SEMI expression;
+
+expression:  expression postfix=(INC | DEC)
+	| expression bop=(MUL | DIV | MOD) expression
+	| expression bop=(ADD | SUB) expression
+	| expression bop=(LE | GE | GT | LT) expression
+	| expression bop=(EQUAL | NOTEQUAL) expression
+    | expression bop=(POW | AND | OR) expression
+	| primary;
+
+primary: LPAREN expression RPAREN
+	| literal
+	| IDENTIFIER;
+
+type:
+    BOOLEAN
+	| INT
+	| FLOAT
+	| CHAR
+	| STRING;
+
+literal:
+    NULL_LITERAL
+	| INT_LITERAL
+	| FLOAT_LITERAL
+	| CHAR_LITERAL
+	| boolLiteral
+	| stringLiteral;
+
+stringLiteral: STRING_LITERAL;
+
+boolLiteral: TRUE | FALSE;
+
+/*
+ * Lexer rules
+ */
 
 LPAREN:             '(';
 RPAREN:             ')';
@@ -35,102 +109,26 @@ BOOLEAN:            'boolean';
 INT:                'int';
 FLOAT:              'float';
 VOID:               'void';
-CHAR				'char';
-STRING				'string';
+CHAR:				'char';
+STRING:				'String';
 
 ELSE:               'else';
 ELSEIF:             'else if';
 FOR:                'for';
 IF:                 'if';
 WHILE:              'while';
-BREAK:				'break;
+BREAK:				'break';
 RETURN:             'return';
-
 PRIVATE:            'private';
 PUBLIC:             'public';
-CLASS:				'class';
-
 TRUE:				'true';
 FALSE:				'false';
-			
-NULL_LITERAL:       'null';
+DO:                 'do';
 
+NULL_LITERAL:       'null';
 INT_LITERAL : 		[0-9]+;
 FLOAT_LITERAL : 	[0-9]+'.'[0-9]+;
-CHAR_LITERAL:		[.];
-
-IDENTIFIER:         [a-zA-Z] [a-zA-Z0-9_]*;
-
-
-//Gramatyka
-
-program: (methodDeclaration | variableDeclaration) EOF;
-
-stringLiteral: (CHAR_LITERAL)+;
-
-boolLiteral: TRUE
-	| FALSE;
-
-basicType: BOOLEAN
-	| INT
-	| FLOAT
-	| CHAR
-	| STRING;
-	
-literal: NULL_LITERAL
-	| INT_LITERAL
-	| FLOAT_LITERAL
-	| CHAR_LITERAL
-	| boolLiteral
-	| stringLiteral;
-	
-basicTypeVoid: basicType
-	| VOID
-	;
-	
-modifier: PRIVATE
-	| PUBLIC;
-	
-methodDeclaration: modifier basicTypeVoid IDENTIFIER LPAREN param? RPAREN block;
-
-param: basicType IDENTIFIER (COMMA basicType IDENTIFIER)*;
-
-block: LBRACE blockStatement* RBRACE;
-
-blockStatement: statement
-	| variableDeclaration SEMI;
-
-statement: assignment SEMI
-	| IF LPAREN expression RPAREN statement (ELSE statement)?
-	| FOR LPAREN forControl RPAREN statement
-	| WHILE LPAREN expression RPAREN statement
-	| DO statement WHILE LPAREN expression RPAREN
-	| RETURN expression?
-	| BREAK IDENTIFIER?
-	| block
-	| SEMI
-	
-expressionList: expression (COMMA expression)*;
-
-forControl: forInit? SEMI expression? SEMI expressionList?;
-	
-forInit: variableDeclaration
-    | expressionList;
-	
-variableDeclaration: basicType IDENTIFIER (ASSIGN expression)? SEMI;
-
-expression: methodCall
-	| expression postfix=(INC | DEC)
-	| prefix=(ADD | SUB| INC | DEC) expression
-	| expression bop=(MUL | DIV | MOD) expression
-	| expression bop=(ADD | SUB) expression
-	| expression bop=(LE | GE | GT | LT) expression
-	| expression bop=(EQUAL | NOTEQUAL) expression
-    | expression bop=(POW | AND | OR) expression
-	| primary;
-	
-primary: LPAREN expression RPAREN
-	| literal
-	| IDENTIFIER;
-	
-assignment: IDENTIFIER ASSIGN expression;
+WHITESPACE:         (' ' | '\t' | '\n') -> skip ;
+CHAR_LITERAL:       '\'' (~['\\\r\n]) '\'';
+IDENTIFIER:         [a-zA-Z][a-zA-Z0-9_]*;
+STRING_LITERAL:     '"' (~["\\\r\n])* '"';
