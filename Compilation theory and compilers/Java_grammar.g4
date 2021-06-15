@@ -14,43 +14,47 @@ methodType: type | VOID;
 
 parameter: type IDENTIFIER (COMMA type IDENTIFIER)*;
 
-statementList: statement+;
+block: LBRACE statementList RBRACE;
 
-block: LBRACE statement* RBRACE;
+statementList: statement+;
 
 statement:
     assignment SEMI
-	| IF LPAREN expression RPAREN block (ELSE block)?
+	| IF LPAREN booleanExpression RPAREN block (ELSE block)?
 	| FOR LPAREN forControl RPAREN block
-	| WHILE LPAREN expression RPAREN block
+	| WHILE LPAREN booleanExpression RPAREN block
 	| RETURN expression? SEMI
 	| BREAK IDENTIFIER? SEMI
 	| variableDeclaration SEMI
-	| expression SEMI
-	| methodInvocation SEMI
-	| block
-	| SEMI;
+	| postfixExpression SEMI
+	| methodInvocation SEMI;
 
-methodInvocation: IDENTIFIER LPAREN argumentList RPAREN;
+methodInvocation: IDENTIFIER LPAREN argumentList? RPAREN;
 
-argumentList: IDENTIFIER (COMMA IDENTIFIER)*;
+argumentList: (IDENTIFIER| literal) (COMMA (IDENTIFIER | literal))*;
 
-variableDeclaration: type IDENTIFIER (ASSIGN expression)?;
+variableDeclaration: type IDENTIFIER (ASSIGN (expression | methodInvocation))?;
 
 assignment: IDENTIFIER ASSIGN expression;
 
-forControl: variableDeclaration SEMI expression SEMI expression;
+forControl: variableDeclaration SEMI booleanExpression SEMI postfixExpression;
 
-expression:  expression postfix=(INC | DEC)
-	| expression bop=(MUL | DIV | MOD) expression
-	| expression bop=(ADD | SUB) expression
-	| expression bop=(LE | GE | GT | LT) expression
-	| expression bop=(EQUAL | NOTEQUAL) expression
-    | expression bop=(POW | AND | OR) expression
+expression:
+    postfixExpression
+	| arthmeticExpression
+	| booleanExpression
 	| primary;
 
-primary: LPAREN expression RPAREN
-	| literal
+postfixExpression: primary postfix=(INC | DEC);
+
+arthmeticExpression:
+    primary bop=(MUL | DIV | MOD | ADD | SUB | POW) primary;
+
+booleanExpression:
+    primary bop=(LE | GE | GT | LT | EQUAL | NOTEQUAL | AND | OR) primary;
+
+primary:
+	literal
 	| IDENTIFIER;
 
 type:
